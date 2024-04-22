@@ -35,15 +35,15 @@ class CloudStorageHandler:
 
     def get_data_from_cloud(self,
                             file_name : str = '',
-                            move_path : str):
+                            move_path : str = None):
         
         blobs = self.client.list_blobs(self.bucket)
         for blob in blobs:
-            if blob.name.endswith(file_name):
-                print('Found file with name {%s}'%{blob.name})
+            if blob.name.endswith('/%s'%(file_name)):
+                print('Found file with name {%s}'%(blob.name))
                 if move_path:
                     path = move_path+file_name 
-                    print('Moving file from different location {from = %s, to = %s}'%{path})
+                    print('Moving file from different location {from = %s, to = %s}'%(blob.name,path))
                     blob.download_to_filename(path)
                 else:
 

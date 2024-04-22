@@ -31,6 +31,7 @@ class Event:
 class Gremlin:
     def __init__(self, 
                  hndl : str = 'dummy',
+                 user : str = 'dummy',
                  export_logs : str = './'):
         ''' 
             NOTE:
@@ -38,8 +39,10 @@ class Gremlin:
                 In case of multiple handlers, a unique handle id (hndl) is require
         '''
         self.hndl = hndl
+        self.user = user
         self.export_logs = export_logs
-        self.curr_log = '%slog_%s%s'%(export_logs,str(time.time_ns()),gremlin_path)
+        self.curr_log = '%s%s_log_%s%s'%(export_logs,self.user,str(time.time_ns()),gremlin_path)
+        self.curr_err_log = '%s%s_error_%s%s'%(export_logs,self.user,str(time.time_ns()),gremlin_path)
         self.curr_evt = None
     
     def link_event(self,
@@ -128,6 +131,17 @@ class Gremlin:
         else:
             self.link_error(task = TASK, msg = 'getting root event not possible. Event does not exist')
 
+    def add_to_err_log(self,msg):
+        if self.export_logs is not None and os.path.isdir(self.export_logs):
+            if os.path.exists(self.curr_err_log):
+                with open(self.curr_err_log,'a') as file:
+                    file.write('%s%s'%(str(msg),'\n'))
+            else:
+                with open(self.curr_err_log,'w') as file:
+                    file.write(' GREMLIN ERROR LOG START \n')
+                    file.write('%s%s'%(str(msg),'\n'))
+        else:
+            raise Exception('export log path does not exist at {%s}' % (self.export_logs))
     def add_to_evt_log(self,msg):
         if self.export_logs is not None and os.path.isdir(self.export_logs):
             if os.path.exists(self.curr_log):
@@ -144,15 +158,14 @@ class Gremlin:
         if self.export_logs is not None and os.path.isdir(self.export_logs):
             if self.curr_evt is not None:
                 warning = '(%s) > [DUMPING LOGS]: Last event (task = {%s}, msg = {%s}, blocking = {%s})' % (time.time(),self.curr_evt.task,self.curr_evt.msg,self.curr_evt.blocking)
-                self.add_to_evt_log(msg = warning)
+                self.add_to_err_log(msg = warning)
                 root_evt = self.get_root_event()
                 if root_evt is not None:
                     curr_evt = root_evt
                     while curr_evt.next is not None:
-                        print(str(curr_evt.__dict__))
-                        self.add_to_evt_log(msg=str(curr_evt.__dict__))
+                        self.add_to_err_log(msg=str(curr_evt.__dict__))
                         curr_evt = curr_evt.next
-                    self.add_to_evt_log(msg=str(curr_evt.__dict__))
+                    self.add_to_err_log(msg=str(curr_evt.__dict__))
                 else:
                     self.link_error(task = TASK, msg = 'Unable to find a root error!') # Really odd case?'''
             else:

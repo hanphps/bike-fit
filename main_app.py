@@ -21,33 +21,34 @@ import sys
 TASK = 'main_task'
 VID_DIR = 'storage/dat/videos/'
 
-def process_fit(video_file : str = '',
-                user : str = ''):
+def process_fit():
     
     pubsub_hndlr.post_message_test(
         topic_path = 'projects/eng-braid-420714/topics/bikefit-sub',
         data = {
-            'user': 'Test'
+            'user': 'Test',
             'video_path': 'crop-test.mp4',
             'record_video' : False
         }
     )
     pubsub_hndlr.wait_for_event()
     job_data = pubsub_hndlr.get_message()
+    cld_hndlr.get_data_from_cloud(file_name=job_data['video_path'], move_path = VID_DIR)
 
-    cld_hndlr.get_data_from_cloud(job_data['video_path'], move_to = VID_DIR)
-
-    if not instanceof(job_data,dict):
+    if not isinstance(job_data,dict):
         # TODO: Throw error
+        pass
     if not job_data['video_path'] or not job_data['user'] or not job_data['record_video']:
         # TODO : Throw error
+        pass
 
     evt_hndlr = Gremlin(hndl='Main',
+                        user=job_data['user'],
                         export_logs='storage/dat/logs/'
                         )
     res_hndlr = ResultHandler(evt_hndlr=evt_hndlr)
     cnfg_hndlr = ConfigHandler(evt_hndlr=evt_hndlr, config_path='storage/config/')
-    fb_hdnlr = PyroHandler(evt_hndlr=evt_hndlr, cnf_hndlr=cnfg_hndlr)
+    fb_hdnlr = PyroHandler(evt_hndlr=evt_hndlr, cnf_hndlr=cnfg_hndlr, user=job_data['user'])
 
     #TODO : evt_hndlr.log_event
     settings = MediaSettings(
@@ -61,7 +62,7 @@ def process_fit(video_file : str = '',
         res_hndlr = res_hndlr,
         settings= settings)
 
-    output_video = vhdlr.process_video(video_file, record_video = False)
+    output_video = vhdlr.process_video(job_data['video_path'], record_video = job_data['record_video'])
 
     #TODO : evt_hndlr.log_event
     if output_video is not None:

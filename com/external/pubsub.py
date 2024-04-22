@@ -30,7 +30,6 @@ class PubSubHandler:
         data = json.dumps(data)
         data = data.encode('utf-8')
         future = publisher.publish(topic_path, data)
-        print(future.result())
 
     def cred_exits(self):
         if os.path.exists(self.cred_file):
@@ -48,8 +47,7 @@ class PubSubHandler:
             print(f"Listening for messages on {self.subscription_path}..\n")
             response = subscriber.pull(subscription = self.subscription_path, max_messages = 1, timeout = 30)
             if response.received_messages:
-                msg = response.received_messages[0]
-                self.return_settings = response.received_messages[0].message.data.decode('utf-8')
+                self.return_settings = json.loads(response.received_messages[0].message.data.decode('utf-8'))
             subscriber.acknowledge(subscription = self.subscription_path, ack_ids=[response.received_messages[0].ack_id])
 
     def get_message(self):

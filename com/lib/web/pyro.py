@@ -34,7 +34,9 @@ class PyroSettings:
 class PyroHandler:
     def __init__(self,
                  evt_hndlr : Gremlin,
-                 cnf_hndlr : ConfigHandler):
+                 cnf_hndlr : ConfigHandler,
+                 user : str = 'dummy'):
+        self.user = user
         self.evt_hndlr = evt_hndlr
         self.pyro_cnf = PyroSettings(evt_hndlr=evt_hndlr,cnf_hndlr=cnf_hndlr)
 
@@ -85,7 +87,7 @@ class PyroHandler:
         blob = self.bucket.blob(file_path)
         blob.download_to_filename(file_path)
     
-    def write_full_results(self, root_res, local_path : str,  user :str):
+    def write_full_results(self, root_res, local_path : str):
         # Full Results TODO: Partial
         res = {}
         curr_res = root_res
@@ -94,8 +96,10 @@ class PyroHandler:
             curr_res = curr_res.next
         res[curr_res.n] = curr_res.to_dict()
 
-        local_file =  '%s/%s_%s.json'%(local_path, str(time.time()), user)
+        local_file =  '%s/%s_results_%s.json'%(local_path, self.user, str(time.time()))
         with open(local_file, 'w') as res_file:
             json.dump(res,res_file)
         self.upload(file_path=local_file)
-        self.db_hndlr.write_run(user = user, msg = local_file)
+        self.db_hndlr.write_run(user = self.user, msg = local_file)
+
+        return local_file

@@ -118,6 +118,7 @@ class VideoHandler:
             self.create_landmarker()
 
         # Load video
+        print(self.settings.vid_dir+vid_path)
         if not os.path.exists(self.settings.vid_dir+vid_path):
             self.evt_hndlr.link_error( task = TASK,
                                     msg = 'video does not exist in specified path {%s}' % (self.settings.vid_dir+vid_path)
@@ -183,3 +184,6 @@ class VideoHandler:
         if record_video:
             cap_writer.release()
         cap.release()
+
+        if record_video:
+            return output_path
