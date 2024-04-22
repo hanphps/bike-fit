@@ -1,0 +1,6 @@
+name: Hello
+key : bike-fit-test-firebase-adminsdk-6ezck-f3dfdc2ad4
+bucket : bike-fit-test
+database :
+  runs : 'runs'
+  events : 'events'

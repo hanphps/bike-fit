@@ -1,0 +1,6 @@
+mediapipe==0.10.9
+firebase_admin
+PyYaml
+ffmpeg
+gunicorn
+google-cloud-pubsub
