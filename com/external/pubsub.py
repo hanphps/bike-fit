@@ -3,7 +3,6 @@
 # Log:
 #   21-Apr-2024 : Creation
 #
-
 # External
 from google.cloud import pubsub_v1
 from google.oauth2 import service_account
@@ -30,7 +29,7 @@ class PubSubHandler:
         data = json.dumps(data)
         data = data.encode('utf-8')
         future = publisher.publish(topic_path, data)
-
+        print(future.result())
     def cred_exits(self):
         if os.path.exists(self.cred_file):
             return True
@@ -38,7 +37,6 @@ class PubSubHandler:
             raise Exception('Credential file DNE')
     
     def wait_for_event(self):
-
         credentials = credentials = service_account.Credentials.from_service_account_file(self.cred_file)
         subscriber = pubsub_v1.SubscriberClient(credentials = credentials)
         
@@ -47,8 +45,12 @@ class PubSubHandler:
             print(f"Listening for messages on {self.subscription_path}..\n")
             response = subscriber.pull(subscription = self.subscription_path, max_messages = 1, timeout = 30)
             if response.received_messages:
-                self.return_settings = json.loads(response.received_messages[0].message.data.decode('utf-8'))
-            subscriber.acknowledge(subscription = self.subscription_path, ack_ids=[response.received_messages[0].ack_id])
-
+                responses = []
+                for event in response.received_messages:
+                    responses.append(json.loads(event.message.data.decode('utf-8')))
+                    subscriber.acknowledge(subscription = self.subscription_path, ack_ids=[event.ack_id])
+                
+            
+    
     def get_message(self):
         return self.return_settings
