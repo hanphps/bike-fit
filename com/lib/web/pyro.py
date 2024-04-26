@@ -45,7 +45,8 @@ class PyroHandler:
                                 )
         
         self.firebase = firebase_admin.initialize_app(self.pyro_cnf.cred,
-                                                      {'storageBucket': '%s.appspot.com' % (self.pyro_cnf.cnf['bucket'])}
+                                                      {'storageBucket': '%s.appspot.com' % (self.pyro_cnf.cnf['bucket'])},
+                                                      name = self.user
                                                       )
         self.bucket = self.get_storage()
 

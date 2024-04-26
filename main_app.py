@@ -12,47 +12,36 @@ from com.lib.handlers.config import ConfigHandler
 from com.lib.web.pyro import PyroHandler
 from cloud import cld_hndlr, pubsub_hndlr
 
-# External
-import os
-import sys
-
-
-
 TASK = 'main_task'
 VID_DIR = 'storage/dat/videos/'
 
-def process_fit():
+def entry():
+
+    job_data = pubsub_hndlr.wait_for_event()
+    if not isinstance(job_data,list):
+        raise Exception('Job_data is not a dict {type = %s}' % str(type(job_data)))
+    if not len(job_data) > 0:
+        raise Exception('Job_data is empty dict {len = %s }' % str(job_data))
+    for job in job_data:
+        process_fit(job)
+        
+def process_fit(job_data):
+    if not ('video_path' in job_data) or not ('user' in job_data) or not ('record_video' in job_data):
+        raise Exception('Job_data does not contain specified params {job_data = %s}' % str(job_data))
     
-    pubsub_hndlr.post_message_test(
-        topic_path = 'projects/eng-braid-420714/topics/bikefit-sub',
-        data = {
-            'user': 'Test',
-            'video_path': 'crop-test.mp4',
-            'record_video' : False
-        }
-    )
-    pubsub_hndlr.wait_for_event()
-    job_data = pubsub_hndlr.get_message()
     cld_hndlr.get_data_from_cloud(file_name=job_data['video_path'], move_path = VID_DIR)
-
-    if not isinstance(job_data,dict):
-        # TODO: Throw error
-        pass
-    if not job_data['video_path'] or not job_data['user'] or not job_data['record_video']:
-        # TODO : Throw error
-        pass
-
+    
     evt_hndlr = Gremlin(hndl='Main',
                         user=job_data['user'],
                         export_logs='storage/dat/logs/'
                         )
     res_hndlr = ResultHandler(evt_hndlr=evt_hndlr)
     cnfg_hndlr = ConfigHandler(evt_hndlr=evt_hndlr, config_path='storage/config/')
-    fb_hdnlr = PyroHandler(evt_hndlr=evt_hndlr, cnf_hndlr=cnfg_hndlr, user=job_data['user'])
+    fb_hdnlr = PyroHandler(evt_hndlr=evt_hndlr, cnf_hndlr=cnfg_hndlr, user = job_data['user'])
 
     #TODO : evt_hndlr.log_event
     settings = MediaSettings(
-        model= ('storage/config/tasks/pose_landmarker_heavy.task'),
+        model= 'storage/config/tasks/pose_landmarker_heavy.task',
         vid_dir=VID_DIR
     )
 
@@ -86,4 +75,4 @@ def process_fit():
 
     cld_hndlr.move_files_to_storage()
 
-process_fit()
+entry()
