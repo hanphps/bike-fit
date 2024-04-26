@@ -12,19 +12,6 @@ from com.lib.handlers.config import ConfigHandler
 from com.lib.web.pyro import PyroHandler
 from cloud import cld_hndlr, pubsub_hndlr
 
-from flask import Flask, request
-import base64
-
-app = Flask(__name__)
-
-
-# External
-import os
-import json
-import sys
-
-
-
 TASK = 'main_task'
 VID_DIR = 'storage/dat/videos/'
 

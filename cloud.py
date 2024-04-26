@@ -16,5 +16,3 @@ pubsub_hndlr = PubSubHandler(
 cld_hndlr = CloudStorageHandler(
         cred_file = cred_file,
         bucket = 'bikefit')
-
-kube_hndlr = None
